@@ -5,10 +5,14 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"net/url"
+	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // sCmd represents the s command
@@ -19,13 +23,13 @@ var sCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var search string
 
-		if len(args) <= 0 && args[0] == "" {
-			fmt.Println("Please provide a search term")
+		if len(args) <= 0 {
+			log.Default().Println("Please provide a search term")
 			return
 		}
 		search = fmt.Sprintf("%s site:(%s)", buildQuery(args), filterSite())
 		search = url.QueryEscape(search)
-		fmt.Println("https://google.com/search?q=" + search)
+		openbrowser(fmt.Sprintf("https://www.google.com/search?q=%s", search))
 	},
 }
 
@@ -41,16 +45,27 @@ func buildQuery(args []string) string {
 }
 
 func filterSite() string {
-	sites := []string{
-		"stackoverflow.com",
-		"github.com",
-		"medium.com",
-		"dev.to",
-		"geeksforgeeks.org",
-		"youtube.com",
+	var sites = viper.GetStringSlice("sites")
+	return strings.Join(sites, " | ")
+}
+
+func openbrowser(url string) {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return strings.Join(sites, " | ")
 }
 
 func init() {

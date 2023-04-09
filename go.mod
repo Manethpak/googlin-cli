@@ -1,8 +1,8 @@
-module github.com/manethpak/googling-cli
+module github.com/manethpak/googlin-cli
 
 go 1.20
 
-require github.com/spf13/cobra v1.6.1
+require github.com/spf13/cobra v1.7.0
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
